@@ -22,14 +22,14 @@ class DatabaseSeeder extends Seeder
         // create test admin user
         $admin = User::factory()->create([
             'name' => 'Admin',
-            'email' => 'admin@example.com',
+            'email' => 'admin@demo.com',
         ]);
         $admin->assignRole('admin');
 
         // create test author
         $author = User::factory()->create([
             'name' => 'Author',
-            'email' => 'author@example.com',
+            'email' => 'author@demo.com',
         ]);
         $author->assignRole('author');
     }
