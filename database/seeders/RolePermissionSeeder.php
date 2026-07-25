@@ -25,7 +25,7 @@ class RolePermissionSeeder extends Seeder
             'delete own posts',
             'delete all posts',
             'publish posts',
-            'manage user',
+            'manage users',
             'manage roles',
         ];
 
