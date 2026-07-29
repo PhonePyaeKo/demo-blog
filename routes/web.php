@@ -19,8 +19,14 @@ Route::middleware('auth')->group(function () {
         ->name('posts.edit');
 
     Route::livewire('/users', 'pages::users.index')
-        ->middleware('can:create users')
+        ->middleware('can:manage users')
         ->name('users.index');
+    Route::livewire('users/create', 'pages::users.create')
+        ->middleware('can:manage users')
+        ->name('users.create');
+    Route::livewire('users/{user}/edit', 'pages::users.edit')
+        ->middleware('can:manage users')
+        ->name('users.edit');
 });
 
 require __DIR__.'/settings.php';

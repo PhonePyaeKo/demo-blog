@@ -24,12 +24,6 @@ new class extends Component {
     #[Validate('required|in:draft,published')]
     public string $status = 'draft';
 
-    #[Validate('required|array|min:1')]
-    public array $selectedCategories = [];
-
-    #[Validate('nullable|array')]
-    public array $selectedTags = [];
-
     public function save()
     {
         $this->validate();
@@ -53,13 +47,6 @@ new class extends Component {
 
         $post->save();
 
-        // attach the categories
-        $post->categories()->attach($this->selectedCategories);
-
-        if (!empty($this->selectedTags)) {
-            $post->tags()->attach($this->selectedTags);
-        }
-
         session()->flash('success', 'Post created successfully!');
 
         $this->redirect(route('posts.index'), navigate: true);
@@ -67,168 +54,196 @@ new class extends Component {
 };
 ?>
 
-<div>
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Create New Post</h1>
-        <p class="mt-1 text-sm text-gray-600">Write and publish your blog post</p>
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">
+            Create New Post
+        </h1>
+        <p class="mt-2 text-gray-500">
+            Write and publish your blog post.
+        </p>
     </div>
 
-    {{-- form --}}
-    <div class="bg-white rounded-lg border border-gray-200 p-6">
-        <form wire:submit="save" class="space-y-6">
-            <!-- Title -->
-            <div>
-                <label for="title" class="block text-sm font-medium text-gray-700">
-                    Title
-                </label>
-                <input type="text" id="title" wire:model.live.debounce="title" placeholder="Enter post title"
-                    autofocus
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                @error('title')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
+    <form wire:submit="save">
 
-            <!-- Excerpt -->
-            <div>
-                <label for="excerpt" class="block text-sm font-medium text-gray-700">
-                    Excerpt
-                </label>
-                <textarea id="excerpt" wire:model="excerpt" placeholder="A short summary of your post (optional)" rows="2"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
-                @error('excerpt')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-                <p class="mt-1 text-sm text-gray-500">This will appear in post previews and search results</p>
-            </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
 
-            <!-- Content -->
-            <div>
-                <label for="content" class="block text-sm font-medium text-gray-700">
-                    Content
-                </label>
-                <div wire:ignore>
-                    <input type="hidden" name="content" id="x-content">
-                    <trix-editor input="x-content" class="trix-content" x-data
-                        x-on:trix-change="$wire.content = $event.target.value"></trix-editor>
-                </div>
+            <div class="p-8 space-y-8">
 
-                @error('content')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Featured Image -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">
-                    Featured Image
-                </label>
-                <input type="file" wire:model="featured_image" accept="image/*"
-                    class="mt-1 block w-full text-sm text-gray-500
-                        file:mr-4 file:py-2 file:px-4
-                        file:rounded-md file:border-0
-                        file:text-sm file:font-semibold
-                        file:bg-indigo-50 file:text-indigo-700
-                        hover:file:bg-indigo-100" />
-                @error('featured_image')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-
-                @if ($featured_image)
-                    <div class="mt-3" wire:transition>
-                        <img src="{{ $featured_image->temporaryUrl() }}"
-                            class="h-32 w-auto rounded border border-gray-300" alt="Preview">
-                    </div>
-                @endif
-
-                <div wire:loading wire:target="featured_image" class="mt-2 text-sm text-gray-500">
-                    Uploading...
-                </div>
-            </div>
-
-            <!-- Categories -->
-            {{-- <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Categories (Required)
-                </label>
-                <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-300 rounded-md p-3">
-                    @foreach ($categories as $category)
-                        <label class="flex items-center">
-                            <input type="checkbox" wire:model="selectedCategories" value="{{ $category->id }}"
-                                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-                            <span class="ml-3 flex items-center">
-                                <span class="inline-block w-3 h-3 rounded-full mr-2"
-                                    style="background-color: {{ $category->color }}"></span>
-                                <span class="text-sm font-medium text-gray-700">{{ $category->name }}</span>
-                            </span>
-                        </label>
-                    @endforeach
-                </div>
-                @error('selectedCategories')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div> --}}
-            <!-- Tags -->
-            {{-- <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Tags (Optional)
-                </label>
-                <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-300 rounded-md p-3">
-                    @foreach ($tags as $tag)
-                        <label class="flex items-center">
-                            <input type="checkbox" wire:model="selectedTags" value="{{ $tag->id }}"
-                                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-                            <span class="ml-3 text-sm font-medium text-gray-700">{{ $tag->name }}</span>
-                        </label>
-                    @endforeach
-                </div>
-                @error('selectedTags')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-                <p class="mt-1 text-sm text-gray-500">Select relevant tags to help readers find your content</p>
-            </div> --}}
-            <!-- Status -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                </label>
+                <!-- Title -->
                 <div class="space-y-2">
-                    <label class="flex items-start">
-                        <input type="radio" wire:model="status" value="draft"
-                            class="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300" />
-                        <div class="ml-3">
-                            <span class="block text-sm font-medium text-gray-700">Draft</span>
-                            <span class="block text-sm text-gray-500">Save as draft, not visible to readers</span>
-                        </div>
+                    <label for="title" class="text-sm font-medium text-gray-700">
+                        Post Title <span class="text-red-500">*</span>
                     </label>
 
-                    @can('publish posts')
-                        <label class="flex items-start">
-                            <input type="radio" wire:model="status" value="published"
-                                class="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300" />
-                            <div class="ml-3">
-                                <span class="block text-sm font-medium text-gray-700">Published</span>
-                                <span class="block text-sm text-gray-500">Publish immediately, visible to all readers</span>
-                            </div>
-                        </label>
-                    @endcan
+                    <input id="title" type="text" wire:model.live.debounce="title"
+                        placeholder="Enter your post title..." autofocus
+                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 transition focus:ring-2 focus:ring-indigo-100 focus:outline-none">
+
+                    @error('title')
+                        <p class="text-sm text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
-                @error('status')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
+
+                <!-- Excerpt -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label for="excerpt" class="text-sm font-semibold text-gray-800">
+                            Short Description
+                        </label>
+                        <span class="text-xs text-gray-400">
+                            Optional
+                        </span>
+                    </div>
+
+                    <textarea id="excerpt" wire:model.live="excerpt" rows="4" placeholder="Write a brief summary of your post..."
+                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 transition focus:ring-2 focus:ring-indigo-100 focus:outline-none"></textarea>
+
+                    <div class="flex items-center justify-between">
+                        <p class="text-xs text-gray-500">
+                            This description will appear in previews and search results.
+                        </p>
+
+                        <span class="text-xs text-gray-400">
+                            {{ strlen($excerpt ?? '') }}/160
+                        </span>
+                    </div>
+
+                    @error('excerpt')
+                        <p class="flex items-center gap-1 text-sm text-red-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
+                            </svg>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
+                <!-- Content -->
+                <div>
+                    <label class="block mb-2 text-sm font-semibold text-gray-700">
+                        Content
+                    </label>
+
+                    <div class="rounded-xl border border-gray-300 overflow-hidden">
+                        <div wire:ignore>
+                            <input type="hidden" id="x-content">
+
+                            <trix-editor input="x-content" class="trix-content" x-data
+                                x-on:trix-change="$wire.content = $event.target.value">
+                            </trix-editor>
+                        </div>
+                    </div>
+
+                    @error('content')
+                        <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Image + Status -->
+                <div class="grid md:grid-cols-2 gap-8">
+
+                    <!-- Featured Image -->
+                    <div>
+                        <label class="block mb-2 text-sm font-semibold text-gray-700">
+                            Featured Image
+                        </label>
+
+                        <input type="file" wire:model="featured_image" accept="image/*"
+                            class="block w-full text-sm text-gray-600
+                            file:mr-4 file:px-4 file:py-2
+                            file:rounded-lg file:border-0
+                            file:bg-indigo-600 file:text-white
+                            hover:file:bg-indigo-700">
+
+                        @error('featured_image')
+                            <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+
+                        <div wire:loading wire:target="featured_image" class="mt-3 text-sm text-indigo-600">
+                            Uploading...
+                        </div>
+
+                        @if ($featured_image)
+                            <div class="mt-4">
+                                <img src="{{ $featured_image->temporaryUrl() }}"
+                                    class="rounded-xl border w-full max-w-xs shadow-sm" alt="Preview">
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label class="block mb-4 text-sm font-semibold text-gray-700">
+                            Post Status
+                        </label>
+
+                        <div class="space-y-4">
+
+                            <label
+                                class="flex items-center p-4 rounded-xl border cursor-pointer hover:border-indigo-500">
+                                <input type="radio" wire:model="status" value="draft" class="text-indigo-600">
+
+                                <div class="ml-3">
+                                    <p class="font-medium text-gray-800">
+                                        Draft
+                                    </p>
+                                    <p class="text-sm text-gray-500">
+                                        Save without publishing.
+                                    </p>
+                                </div>
+                            </label>
+
+                            @can('publish posts')
+                                <label
+                                    class="flex items-center p-4 rounded-xl border cursor-pointer hover:border-indigo-500">
+                                    <input type="radio" wire:model="status" value="published" class="text-indigo-600">
+
+                                    <div class="ml-3">
+                                        <p class="font-medium text-gray-800">
+                                            Published
+                                        </p>
+                                        <p class="text-sm text-gray-500">
+                                            Make this post visible immediately.
+                                        </p>
+                                    </div>
+                                </label>
+                            @endcan
+
+                        </div>
+
+                        @error('status')
+                            <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                </div>
+
             </div>
 
-            <!-- Actions -->
-            <div class="flex gap-3">
-                <button type="submit"
-                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                    Create Post
-                </button>
+            <!-- Footer -->
+            <div class="border-t bg-gray-50 px-8 py-5 flex justify-end gap-3">
+
                 <a href="{{ route('posts.index') }}"
-                    class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    class="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition">
                     Cancel
                 </a>
+
+                <button type="submit"
+                    class="px-5 py-2.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition">
+                    Create Post
+                </button>
+
             </div>
-        </form>
-    </div>
+
+        </div>
+
+    </form>
+
 </div>
